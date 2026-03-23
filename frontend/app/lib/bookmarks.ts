@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react";
 import type { Article } from "@/app/types";
+import { getUserScope } from "@/app/lib/userScope";
 
-const KEY = "newsagg_bookmarks";
+const BASE_KEY = "newsagg_bookmarks";
+const key = () => BASE_KEY + getUserScope();
 
 export function getBookmarks(): Article[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? "[]");
+    return JSON.parse(localStorage.getItem(key()) ?? "[]");
   } catch {
     return [];
   }
@@ -22,9 +24,9 @@ export function toggleBookmark(article: Article): boolean {
   const current = getBookmarks();
   const exists   = current.some((a) => a.id === article.id);
   if (exists) {
-    localStorage.setItem(KEY, JSON.stringify(current.filter((a) => a.id !== article.id)));
+    localStorage.setItem(key(), JSON.stringify(current.filter((a) => a.id !== article.id)));
   } else {
-    localStorage.setItem(KEY, JSON.stringify([article, ...current]));
+    localStorage.setItem(key(), JSON.stringify([article, ...current]));
   }
   window.dispatchEvent(new Event("bookmarks-changed"));
   return !exists;

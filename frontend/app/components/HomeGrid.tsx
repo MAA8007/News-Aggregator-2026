@@ -482,11 +482,13 @@ export default function HomeGrid({
       {/* ── Zone 2: Secondary strip (4 compact cards) ────────────── */}
       {strip.length > 0 && (
         <div
-          className="grid border-b"
-          style={{
-            gridTemplateColumns: `repeat(${strip.length}, 1fr)`,
-            borderColor: "var(--border)",
-          }}
+          className={`grid border-b ${
+            strip.length === 1 ? "grid-cols-1" :
+            strip.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+            strip.length === 3 ? "grid-cols-2 sm:grid-cols-3" :
+            "grid-cols-2 sm:grid-cols-4"
+          }`}
+          style={{ borderColor: "var(--border)" }}
         >
           {strip.map((article, idx) => (
             <StripCard
@@ -513,7 +515,7 @@ export default function HomeGrid({
 
       {/* ── Zone 4: Latest chronological feed ────────────────────── */}
       {latest.length > 0 && (
-        <div className="max-w-4xl mx-auto px-8 pt-8 pb-2">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 pt-8 pb-2">
           <div className="flex items-center gap-5 mb-2">
             <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
             <span

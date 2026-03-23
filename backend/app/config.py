@@ -7,6 +7,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/newsagg"
     SYNC_DATABASE_URL: str = "postgresql+psycopg2://postgres:password@localhost:5432/newsagg"
 
+    # Auth
+    JWT_SECRET: str = "change-me-in-production-use-a-long-random-string"
+
+    # Sports APIs
+    FOOTBALL_DATA_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+
     # Jina AI reader base URL
     JINA_BASE_URL: str = "https://r.jina.ai/"
 

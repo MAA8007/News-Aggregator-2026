@@ -4,17 +4,23 @@ import { useEffect, useRef, useState } from "react";
 
 import Sidebar         from "@/app/components/SideBar";
 import Header          from "@/app/components/Header";
+import AuthModal       from "@/app/components/AuthModal";
+import { AuthProvider, useAuth } from "@/app/contexts/AuthContext";
 import HomeGrid        from "@/app/components/HomeGrid";
 import CategoryGrid    from "@/app/components/CategoryGrid";
 import SkeletonGrid    from "@/app/components/SkeletonGrid";
 import BookmarksView   from "@/app/components/BookmarksView";
+import MoviesPage      from "@/app/components/MoviesPage";
+import BooksPage       from "@/app/components/BooksPage";
+import SportsPage      from "@/app/components/SportsPage";
 import CustomFeedModal from "@/app/components/CustomFeedModal";
 import { fetchFilters, fetchNews, fetchSections } from "@/app/lib/api";
 import type { Article, Filters, Sections } from "@/app/types";
 
 const PAGE_SIZE = 12;
 
-export default function HomePage() {
+function AppContent() {
+  const { authModalOpen } = useAuth();
   const [articles,       setArticles]       = useState<Article[]>([]);
   const [total,          setTotal]          = useState(0);
   const [page,           setPage]           = useState(1);
@@ -22,6 +28,7 @@ export default function HomePage() {
   const [loadingMore,    setLoadingMore]    = useState(false);
   const [category,       setCategory]       = useState<string | null>(null);
   const [source,         setSource]         = useState<string | null>(null);
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
   const [filters,        setFilters]        = useState<Filters>({
     categories: [],
     sources: [],
@@ -31,7 +38,7 @@ export default function HomePage() {
   });
   const [sections,       setSections]       = useState<Sections>({});
   const [refreshKey,     setRefreshKey]     = useState(0);
-  const [view,           setView]           = useState<"feed" | "bookmarks">("feed");
+  const [view,           setView]           = useState<"feed" | "bookmarks" | "movies" | "books" | "sports">("feed");
   const [customFeedsOpen, setCustomFeedsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,14 +127,19 @@ export default function HomePage() {
         activeCategory={category}
         activeSource={source}
         activeView={view}
-        onCategoryChange={(cat) => { setCategory(cat); setView("feed"); }}
-        onSourceChange={(src) => { setSource(src); setView("feed"); }}
-        onBookmarksClick={() => setView(view === "bookmarks" ? "feed" : "bookmarks")}
-        onCustomFeedsClick={() => setCustomFeedsOpen(true)}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onCategoryChange={(cat) => { setCategory(cat); setView("feed"); setSidebarOpen(false); }}
+        onSourceChange={(src) => { setSource(src); setView("feed"); setSidebarOpen(false); }}
+        onBookmarksClick={() => { setView(view === "bookmarks" ? "feed" : "bookmarks"); setSidebarOpen(false); }}
+        onCustomFeedsClick={() => { setCustomFeedsOpen(true); setSidebarOpen(false); }}
+        onMoviesClick={() => { setView(view === "movies" ? "feed" : "movies"); setSidebarOpen(false); }}
+        onBooksClick={() => { setView(view === "books" ? "feed" : "books"); setSidebarOpen(false); }}
+        onSportsClick={() => { setView(view === "sports" ? "feed" : "sports"); setSidebarOpen(false); }}
       />
 
       {/* ── Main content ─────────────────────────── */}
-      <main className="flex-1 min-w-0" style={{ marginLeft: "220px" }}>
+      <main className="flex-1 min-w-0 md:ml-[220px]">
 
         <Header
           total={total}
@@ -138,7 +150,17 @@ export default function HomePage() {
           onCategoryClick={(cat) => { setCategory(cat); setSource(null); }}
           onSourceClick={(src) => { setSource(src); }}
           onScrapeComplete={() => setRefreshKey((k) => k + 1)}
+          onMenuClick={() => setSidebarOpen(true)}
         />
+
+        {/* Movies view */}
+        {view === "movies" && <MoviesPage />}
+
+        {/* Books view */}
+        {view === "books" && <BooksPage />}
+
+        {/* Sports view */}
+        {view === "sports" && <SportsPage />}
 
         {/* Bookmarks view */}
         {view === "bookmarks" && (
@@ -231,6 +253,15 @@ export default function HomePage() {
           onFeedAdded={() => setRefreshKey((k) => k + 1)}
         />
       )}
+      {authModalOpen && <AuthModal />}
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

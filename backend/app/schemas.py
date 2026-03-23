@@ -58,3 +58,112 @@ class ScrapeStatus(BaseModel):
     saved: int
     skipped: int
     errors: int
+
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+class UserSignup(BaseModel):
+    username: str = Field(min_length=2, max_length=64)
+    email: str = Field(min_length=3, max_length=256)
+    password: str = Field(min_length=6, max_length=128)
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    username: str
+    email: str
+    created_at: datetime
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
+# ── User data ─────────────────────────────────────────────────────────────────
+
+class MovieStateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    movie_ranking: int
+    watched: bool
+    in_list: bool
+    bookmarked: bool
+
+
+class BookStateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    book_ranking: int
+    read: bool
+    in_list: bool
+    bookmarked: bool
+
+
+class MovieStateUpsert(BaseModel):
+    watched: bool
+    in_list: bool
+    bookmarked: bool
+
+
+class BookStateUpsert(BaseModel):
+    read: bool
+    in_list: bool
+    bookmarked: bool
+
+
+class CustomMovieIn(BaseModel):
+    client_ranking: int
+    title: str = Field(min_length=1, max_length=512)
+    director: str = Field(default="", max_length=256)
+    year: int
+    overall_score: float = Field(default=0.0, ge=0, le=100)
+    description: str = Field(default="", max_length=4096)
+    genre: str = Field(default="", max_length=128)
+
+
+class CustomMovieOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    client_ranking: int
+    title: str
+    director: str
+    year: int
+    overall_score: float
+    description: str
+    genre: str
+
+
+class CustomBookIn(BaseModel):
+    client_ranking: int
+    title: str = Field(min_length=1, max_length=512)
+    author: str = Field(default="", max_length=256)
+    year: int
+    year_display: str = Field(default="", max_length=64)
+    read_time: str = Field(default="", max_length=128)
+    description: str = Field(default="", max_length=4096)
+
+
+class CustomBookOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    client_ranking: int
+    title: str
+    author: str
+    year: int
+    year_display: str
+    read_time: str
+    description: str
+
+
+class BulkSyncMovieStates(BaseModel):
+    states: dict[int, MovieStateUpsert]
+
+
+class BulkSyncBookStates(BaseModel):
+    states: dict[int, BookStateUpsert]

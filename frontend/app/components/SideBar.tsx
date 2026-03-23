@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Filters } from "@/app/types";
 import { useBookmarkCount } from "@/app/lib/bookmarks";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 interface CategoryGroup {
   label: string;
@@ -43,11 +44,16 @@ interface SidebarProps {
   filters: Filters;
   activeCategory: string | null;
   activeSource: string | null;
-  activeView: "feed" | "bookmarks";
+  activeView: "feed" | "bookmarks" | "movies" | "books" | "sports";
+  isOpen: boolean;
+  onClose: () => void;
   onCategoryChange: (cat: string | null) => void;
   onSourceChange:   (src: string | null) => void;
   onBookmarksClick: () => void;
   onCustomFeedsClick: () => void;
+  onMoviesClick: () => void;
+  onBooksClick: () => void;
+  onSportsClick: () => void;
 }
 
 export default function Sidebar({
@@ -55,11 +61,17 @@ export default function Sidebar({
   activeCategory,
   activeSource,
   activeView,
+  isOpen,
+  onClose,
   onCategoryChange,
   onSourceChange,
   onBookmarksClick,
   onCustomFeedsClick,
+  onMoviesClick,
+  onBooksClick,
+  onSportsClick,
 }: SidebarProps) {
+  const { user, logout, openAuthModal } = useAuth();
   const bookmarkCount = useBookmarkCount();
   const categoryGroups = buildCategoryGroups(filters.sources, filters.source_categories);
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
@@ -87,8 +99,18 @@ export default function Sidebar({
   const hasFilter = activeCategory !== null || activeSource !== null;
 
   return (
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={onClose}
+        />
+      )}
     <aside
-      className="fixed top-0 left-0 h-screen w-[220px] flex flex-col z-40 border-r"
+      className={`fixed top-0 left-0 h-screen w-[220px] flex flex-col z-40 border-r transform transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}
       style={{ backgroundColor: "var(--bg-sidebar)", borderColor: "var(--border)" }}
     >
       {/* ── Logo ─────────────────────────────────────── */}
@@ -282,34 +304,77 @@ export default function Sidebar({
           <span className="text-[11px]">⊕</span>
           <span className="flex-1 text-left">Custom Feeds</span>
         </button>
+        <button
+          onClick={onMoviesClick}
+          className={`nav-item ${activeView === "movies" ? "nav-item-active" : ""}`}
+        >
+          <span className="text-[11px]">▷</span>
+          <span className="flex-1 text-left">Films</span>
+        </button>
+        <button
+          onClick={onBooksClick}
+          className={`nav-item ${activeView === "books" ? "nav-item-active" : ""}`}
+        >
+          <span className="text-[11px]">◈</span>
+          <span className="flex-1 text-left">Books</span>
+        </button>
+        <button
+          onClick={onSportsClick}
+          className={`nav-item ${activeView === "sports" ? "nav-item-active" : ""}`}
+        >
+          <span className="text-[11px]">◑</span>
+          <span className="flex-1 text-left">Sports</span>
+        </button>
       </div>
 
       {/* ── User ─────────────────────────────────────── */}
-      {/* <div
-        className="px-4 py-4 border-t flex items-center gap-2.5"
+      <div
+        className="px-4 py-3.5 border-t flex items-center gap-2.5"
         style={{ borderColor: "var(--border)" }}
       >
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{ backgroundColor: "var(--accent)", color: "#000" }}
-        >
-          A
-        </div>
-        <div className="min-w-0">
-          <p
-            className="text-xs font-semibold truncate"
-            style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
-          >
-            Admin
-          </p>
-          <p
-            className="text-[9px] tracking-widest uppercase"
+        {user ? (
+          <>
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 uppercase"
+              style={{ backgroundColor: "var(--accent-dim)", color: "var(--accent)", border: "1px solid var(--accent-border)" }}
+            >
+              {user.username[0]}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p
+                className="text-xs font-semibold truncate"
+                style={{ fontFamily: "Syne, sans-serif", color: "var(--text-primary)" }}
+              >
+                {user.username}
+              </p>
+              <p
+                className="text-[9px] tracking-widest uppercase truncate"
+                style={{ fontFamily: "Syne, sans-serif", color: "var(--text-faint)" }}
+              >
+                {user.email}
+              </p>
+            </div>
+            <button
+              onClick={logout}
+              title="Sign out"
+              className="shrink-0 text-[9px] font-semibold tracking-[0.15em] uppercase hover:opacity-60 transition-opacity"
+              style={{ fontFamily: "Syne, sans-serif", color: "var(--text-faint)" }}
+            >
+              out
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={openAuthModal}
+            className="w-full flex items-center gap-2 text-[9px] font-semibold tracking-[0.18em] uppercase transition-opacity hover:opacity-70"
             style={{ fontFamily: "Syne, sans-serif", color: "var(--text-faint)" }}
           >
-            Member
-          </p>
-        </div>
-      </div> */}
+            <span className="text-[11px]">◎</span>
+            Sign In
+          </button>
+        )}
+      </div>
     </aside>
+    </>
   );
 }

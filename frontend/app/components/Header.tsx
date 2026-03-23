@@ -14,6 +14,7 @@ interface HeaderProps {
   onCategoryClick: (cat: string) => void;
   onSourceClick: (src: string) => void;
   onScrapeComplete: () => void;
+  onMenuClick: () => void;
 }
 
 type ScrapeState = "idle" | "running" | "done" | "error";
@@ -27,6 +28,7 @@ export default function Header({
   onCategoryClick,
   onSourceClick,
   onScrapeComplete,
+  onMenuClick,
 }: HeaderProps) {
   const [searchOpen, setSearchOpen]   = useState(false);
   const [scrapeState, setScrapeState] = useState<ScrapeState>("idle");
@@ -65,8 +67,21 @@ export default function Header({
         className="flex items-center gap-4 px-8 border-b"
         style={{ borderColor: "var(--border)", height: "57px" }}
       >
-        {/* ── Left: live badge + scrape ───────────────────────────── */}
+        {/* ── Left: hamburger (mobile) + scrape ───────────────────── */}
         <div className="flex items-center gap-3 shrink-0">
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden flex items-center justify-center w-8 h-8 transition-opacity hover:opacity-60"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+            style={{ color: "var(--text-faint)" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
           {/* <div className="live-badge">
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse-dot inline-block shrink-0"
@@ -186,7 +201,7 @@ export default function Header({
               Search
             </span>
             <span
-              className="text-[8px] tracking-wide opacity-50"
+              className="hidden sm:inline text-[8px] tracking-wide opacity-50"
               style={{ fontFamily: "Syne, sans-serif" }}
             >
               ⌘K
@@ -195,7 +210,7 @@ export default function Header({
 
           {total > 0 && (
             <span
-              className="text-[10px] tracking-wide"
+              className="hidden sm:inline text-[10px] tracking-wide"
               style={{ fontFamily: "Syne, sans-serif", color: "var(--text-faint)" }}
             >
               {total.toLocaleString()} articles
