@@ -1,0 +1,210 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700;1,800&family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens — Dark (default) ────────────────────────────── */
+:root {
+  --bg-base:        #0c0c0c;
+  --bg-card:        #141414;
+  --bg-hover:       #1a1a1a;
+  --bg-sidebar:     #0a0a0a;
+  --border:         rgba(255, 255, 255, 0.07);
+  --border-hover:   rgba(255, 255, 255, 0.14);
+  --text-primary:   #f0ede8;
+  --text-muted:     rgba(240, 237, 232, 0.45);
+  --text-faint:     rgba(240, 237, 232, 0.22);
+  --accent:         #00cfc8;
+  --accent-dim:     rgba(0, 207, 200, 0.10);
+  --accent-border:  rgba(0, 207, 200, 0.30);
+  --overlay-hover:  rgba(255, 255, 255, 0.025);
+  --overlay-active: rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Design Tokens — Light ──────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-base:        #f4f0e8;
+  --bg-card:        #ede8df;
+  --bg-hover:       #e6e1d8;
+  --bg-sidebar:     #ede8df;
+  --border:         rgba(0, 0, 0, 0.09);
+  --border-hover:   rgba(0, 0, 0, 0.18);
+  --text-primary:   #1c1c1c;
+  --text-muted:     rgba(28, 28, 28, 0.55);
+  --text-faint:     rgba(28, 28, 28, 0.32);
+  --accent:         #007a75;
+  --accent-dim:     rgba(0, 122, 117, 0.10);
+  --accent-border:  rgba(0, 122, 117, 0.30);
+  --overlay-hover:  rgba(0, 0, 0, 0.06);
+  --overlay-active: rgba(0, 0, 0, 0.10);
+}
+
+html  { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.scrollbar-hide                   { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar{ display: none; }
+
+/* ─── Component Layer ───────────────────────────────────────────── */
+@layer components {
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-2.5 w-full px-3 py-2.5 text-left rounded-sm
+           transition-all duration-150 cursor-pointer;
+    font-family: "Syne", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .nav-item:hover   { color: var(--text-primary); background: var(--overlay-hover); }
+  .nav-item-active  { color: var(--text-primary) !important; background: var(--overlay-active) !important; }
+
+  /* Live badge */
+  .live-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-semibold tracking-[0.15em] uppercase;
+    font-family: "Syne", sans-serif;
+    color: var(--accent);
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+  }
+
+  /* Editorial image card */
+  .editorial-img-card {
+    @apply block relative overflow-hidden cursor-pointer;
+  }
+  .editorial-img-card img {
+    @apply transition-transform duration-700;
+  }
+  .editorial-img-card:hover img {
+    transform: scale(1.04);
+  }
+
+  /* Editorial text card */
+  .editorial-text-card {
+    @apply block cursor-pointer border-b transition-colors duration-200;
+    border-color: var(--border);
+  }
+  .editorial-text-card:hover {
+    background: var(--overlay-hover);
+  }
+
+  /* Panel card (right-side blocks) */
+  .panel-card {
+    @apply border cursor-pointer transition-all duration-200;
+    border-color: var(--border);
+    background: var(--bg-card);
+  }
+  .panel-card:hover {
+    border-color: var(--border-hover);
+    background: var(--bg-hover);
+  }
+
+  /* Load more button */
+  .editorial-btn {
+    @apply px-8 py-2.5 border text-xs font-semibold tracking-[0.18em] uppercase
+           transition-all duration-200;
+    font-family: "Syne", sans-serif;
+    border-color: var(--border-hover);
+    color: var(--text-muted);
+  }
+  .editorial-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+  }
+  .editorial-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+/* ─── Fluid theme transition ─────────────────────────────────────── */
+/* Applied only during the toggle, then removed — avoids slowing every animation */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition:
+    background-color 0.4s ease,
+    color            0.4s ease,
+    border-color     0.4s ease,
+    fill             0.4s ease,
+    opacity          0.4s ease !important;
+}
+
+/* ─── Feed refresh fade ───────────────────────────────────────────── */
+@keyframes feed-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.feed-refresh {
+  animation: feed-fade-in 0.5s ease forwards;
+}
+
+/* ─── Light mode: image blending ────────────────────────────────────
+   Images in light mode look pasted-in without this. A warm filter
+   and a thin outline soften the edges so photos feel part of the page. */
+[data-theme="light"] .editorial-img-card img {
+  filter: sepia(14%) brightness(0.96) contrast(0.97);
+  transition: filter 0.4s ease, transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-theme="light"] .editorial-img-card {
+  outline: 1px solid rgba(0, 0, 0, 0.08);
+  outline-offset: -1px;
+}
+
+/* ─── Light mode overrides for hardcoded white Tailwind hover utilities ── */
+[data-theme="light"] .hover\:bg-white\/\[0\.02\]:hover,
+[data-theme="light"] .hover\:bg-white\/\[0\.025\]:hover,
+[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover {
+  background-color: var(--overlay-hover) !important;
+}
+
+/* ─── Skeleton shimmer ───────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.03) 0px,
+    rgba(255,255,255,0.07) 40px,
+    rgba(255,255,255,0.03) 80px
+  );
+  background-size: 700px 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+[data-theme="light"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.04) 0px,
+    rgba(0,0,0,0.09) 40px,
+    rgba(0,0,0,0.04) 80px
+  );
+  background-size: 700px 100%;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -700px 0; }
+  100% { background-position:  700px 0; }
+}
+
+/* ─── Float animations (kept for subtle ambient motion) ─────────── */
+@keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(30px,-20px)} }
+@keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,25px)} }
+@keyframes float3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(15px,-30px)} }
+@keyframes float4 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-25px,15px)} }
+
+.animate-float1 { animation: float1 14s ease-in-out infinite; }
+.animate-float2 { animation: float2 17s ease-in-out infinite; }
+.animate-float3 { animation: float3 12s ease-in-out infinite; }
+.animate-float4 { animation: float4 19s ease-in-out infinite; }
+
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.8)} }
+.animate-pulse-dot  { animation: pulse-dot 2s ease-in-out infinite; }

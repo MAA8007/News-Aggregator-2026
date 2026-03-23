@@ -1,0 +1,936 @@
+--- FILE: app/types/index.ts ---
+```
+export interface Article {
+  id: number;
+  title: string;
+  link: string;
+  pub_date: string | null;
+  image_url: string | null;
+  source: string;
+  category: string;
+  content: string | null;
+  created_at: string;
+}
+
+export interface PaginatedArticles {
+  total: number;
+  page: number;
+  page_size: number;
+  items: Article[];
+}
+
+export interface Filters {
+  categories: string[];
+  sources: string[];
+}
+```
+
+--- FILE: app/components/SkeletonGrid.tsx ---
+```
+function SkeletonCard({ tall = false }: { tall?: boolean }) {
+  return (
+    <div className={`glass-card overflow-hidden ${tall ? "row-span-2" : ""}`}>
+      <div className="h-44 skeleton rounded-t-3xl" />
+      <div className="p-4 flex flex-col gap-3">
+        <div className="h-2.5 w-20 skeleton rounded-full" />
+        <div className="h-4 w-full skeleton rounded-md" />
+        <div className="h-4 w-4/5 skeleton rounded-md" />
+        <div className="h-3 w-full skeleton rounded-md mt-1" />
+        <div className="h-3 w-2/3 skeleton rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+export default function SkeletonGrid({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-[280px]">
+      {/* Hero placeholder */}
+      <div className="lg:col-span-2 lg:row-span-2">
+        <div className="glass-card h-full overflow-hidden">
+          <div className="h-full skeleton rounded-3xl" />
+        </div>
+      </div>
+      {/* Fill the rest */}
+      {Array.from({ length: count - 1 }).map((_, i) => (
+        <div key={i} className="lg:col-span-1">
+          <SkeletonCard />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+--- FILE: app/components/MeshBackground.tsx ---
+```
+"use client";
+
+export default function MeshBackground() {
+  return (
+    <div
+      className="fixed inset-0 -z-10 overflow-hidden"
+      style={{ backgroundColor: "var(--bg-base)" }}
+    >
+      {/* Orb 1 – cyan/blue, top-left */}
+      <div
+        className="absolute rounded-full opacity-25 blur-[140px] animate-float1"
+        style={{
+          width: 700,
+          height: 700,
+          background:
+            "radial-gradient(circle at center, #00d4ff 0%, #2563eb 50%, transparent 70%)",
+          top: "-15%",
+          left: "-12%",
+        }}
+      />
+
+      {/* Orb 2 – deep violet, bottom-right */}
+      <div
+        className="absolute rounded-full opacity-30 blur-[160px] animate-float2"
+        style={{
+          width: 800,
+          height: 800,
+          background:
+            "radial-gradient(circle at center, #7c3aed 0%, #4c1d95 50%, transparent 70%)",
+          bottom: "-20%",
+          right: "-15%",
+        }}
+      />
+
+      {/* Orb 3 – neon blue, center-right */}
+      <div
+        className="absolute rounded-full opacity-20 blur-[120px] animate-float3"
+        style={{
+          width: 500,
+          height: 500,
+          background:
+            "radial-gradient(circle at center, #3b82f6 0%, #1d4ed8 60%, transparent 70%)",
+          top: "35%",
+          right: "10%",
+        }}
+      />
+
+      {/* Orb 4 – magenta accent, mid-left */}
+      <div
+        className="absolute rounded-full opacity-15 blur-[130px] animate-float4"
+        style={{
+          width: 450,
+          height: 450,
+          background:
+            "radial-gradient(circle at center, #a855f7 0%, #6d28d9 60%, transparent 70%)",
+          top: "50%",
+          left: "5%",
+        }}
+      />
+
+      {/* Subtle grid overlay for depth */}
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+    </div>
+  );
+}
+```
+
+--- FILE: app/components/NewsCard.tsx ---
+```
+"use client";
+
+import Image from "next/image";
+import { motion } from "framer-motion";
+import type { Article } from "@/app/types";
+
+interface NewsCardProps {
+  article: Article;
+  isHero?: boolean;
+  index?: number;
+  priority?: boolean;
+}
+
+export default function NewsCard({
+  article,
+  isHero = false,
+  index = 0,
+  priority = false,
+}: NewsCardProps) {
+  const hasImage = !!article.image_url;
+
+  const handleClick = () => {
+    window.open(article.link, "_blank", "noopener,noreferrer");
+  };
+
+  const motionProps = {
+    initial: { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    transition: { duration: 0.45, delay: index * 0.05, ease: "easeOut" },
+    viewport: { once: true, margin: "-80px" },
+  };
+
+  /* ── State A: Image present ─────────────────────────────────────── */
+  if (hasImage) {
+    return (
+      <motion.div
+        {...motionProps}
+        onClick={handleClick}
+        className="group relative h-full overflow-hidden rounded-3xl cursor-pointer shadow-card hover:shadow-card-hover transition-shadow duration-300"
+        style={{ willChange: "transform" }}
+      >
+        {/* Image with zoom on hover */}
+        <motion.div
+          whileHover={{ scale: 1.06 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="absolute inset-0"
+        >
+          <Image
+            src={article.image_url!}
+            alt={article.title}
+            fill
+            className="object-cover"
+            sizes={isHero ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 100vw, 25vw"}
+            priority={priority}
+            unoptimized
+          />
+        </motion.div>
+
+        {/* Dark gradient for text legibility */}
+        <div className="absolute inset-x-0 bottom-0 h-4/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
+
+        {/* Category badge */}
+        {article.category && (
+          <div className="absolute top-3 left-3 z-10">
+            <span className="font-sans text-xs font-medium px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/85 border border-white/15 tracking-wide">
+              {article.category}
+            </span>
+          </div>
+        )}
+
+        {/* Headline + meta at bottom */}
+        <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-2 text-white/55 text-xs font-sans">
+            <span className="font-medium text-white/70">{article.source}</span>
+            {article.pub_date && (
+              <>
+                <span className="text-white/30">·</span>
+                <time>
+                  {new Date(article.pub_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
+              </>
+            )}
+          </div>
+          <h2
+            className={`font-display font-extrabold leading-tight text-white drop-shadow-sm ${
+              isHero
+                ? "text-2xl sm:text-4xl line-clamp-3"
+                : "text-base sm:text-lg line-clamp-3"
+            }`}
+          >
+            {article.title}
+          </h2>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── State B: No image — frosted quartz typographic card ────────── */
+  const snippet = article.content
+    ? article.content.replace(/\s+/g, " ").trim().slice(0, 150)
+    : null;
+
+  return (
+    <motion.div
+      {...motionProps}
+      onClick={handleClick}
+      className="quartz-card group h-full"
+    >
+      <div className="h-full flex flex-col p-5 sm:p-6">
+        {/* Top row: category + date */}
+        <div className="flex items-center justify-between mb-auto">
+          {article.category ? (
+            <span className="font-sans text-xs font-semibold uppercase tracking-widest text-gray-400">
+              {article.category}
+            </span>
+          ) : (
+            <span />
+          )}
+          {article.pub_date && (
+            <time className="font-sans text-xs text-gray-400">
+              {new Date(article.pub_date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </time>
+          )}
+        </div>
+
+        {/* Centred serif headline */}
+        <div className="flex-1 flex items-center justify-center py-4">
+          <h2
+            className={`font-display font-extrabold text-gray-900 text-center leading-snug line-clamp-4 group-hover:text-gray-600 transition-colors duration-200 ${
+              isHero ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"
+            }`}
+          >
+            {article.title}
+          </h2>
+        </div>
+
+        {/* Content snippet + source */}
+        <div className="mt-auto space-y-2 pt-3 border-t border-gray-100">
+          {snippet && (
+            <p className="font-sans text-sm text-gray-500 leading-relaxed line-clamp-2">
+              {snippet}
+            </p>
+          )}
+          <span className="block font-sans text-xs font-medium text-gray-400">
+            {article.source}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+```
+
+--- FILE: app/components/NewsGrid.tsx ---
+```
+"use client";
+
+import { motion } from "framer-motion";
+import type { Article } from "@/app/types";
+import NewsCard from "./NewsCard";
+
+interface NewsGridProps {
+  articles: Article[];
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────── */
+function countTopImages(articles: Article[]): number {
+  return articles.slice(0, 5).filter((a) => !!a.image_url).length;
+}
+
+/* ── Broadsheet card (text-only, newspaper column style) ─────────── */
+function BroadsheetCard({ article, index }: { article: Article; index: number }) {
+  const snippet = article.content
+    ? article.content.replace(/\s+/g, " ").trim().slice(0, 200)
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.06, ease: "easeOut" }}
+      onClick={() => window.open(article.link, "_blank", "noopener,noreferrer")}
+      className="break-inside-avoid mb-8 pb-8 border-b border-gray-200 cursor-pointer group"
+    >
+      <div className="flex items-center gap-2 mb-3">
+        {article.category && (
+          <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            {article.category}
+          </span>
+        )}
+        {article.category && article.pub_date && (
+          <span className="text-gray-300 text-xs">·</span>
+        )}
+        {article.pub_date && (
+          <time className="font-sans text-xs text-gray-400">
+            {new Date(article.pub_date).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </time>
+        )}
+      </div>
+
+      <h2 className="font-display font-bold text-gray-900 text-xl sm:text-2xl leading-snug mb-3 group-hover:text-gray-500 transition-colors duration-200">
+        {article.title}
+      </h2>
+
+      {snippet && (
+        <p className="font-sans text-sm text-gray-500 leading-relaxed line-clamp-3">
+          {snippet}
+        </p>
+      )}
+
+      <span className="block font-sans text-xs font-medium text-gray-400 mt-3">
+        {article.source}
+      </span>
+    </motion.div>
+  );
+}
+
+/* ── Broadsheet layout (2-column print newspaper flow) ───────────── */
+function BroadsheetLayout({ articles }: { articles: Article[] }) {
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Masthead rule */}
+      <div className="flex items-center gap-4 mb-10">
+        <div className="flex-1 h-px bg-gray-300" />
+        <span className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+          Latest
+        </span>
+        <div className="flex-1 h-px bg-gray-300" />
+      </div>
+
+      {/* Column flow */}
+      <div className="sm:columns-2 gap-10">
+        {articles.map((article, idx) => (
+          <BroadsheetCard key={article.id} article={article} index={idx} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Bento grid ──────────────────────────────────────────────────── */
+function BentoGrid({ articles }: { articles: Article[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-[280px]">
+      {/* Hero (2×2) */}
+      {articles[0] && (
+        <div className="lg:col-span-2 lg:row-span-2">
+          <NewsCard article={articles[0]} isHero index={0} priority />
+        </div>
+      )}
+
+      {/* Sidekick 1 (1×1) */}
+      {articles[1] && (
+        <div className="lg:col-span-1">
+          <NewsCard article={articles[1]} index={1} priority />
+        </div>
+      )}
+
+      {/* Sidekick 2 (1×1) */}
+      {articles[2] && (
+        <div className="lg:col-span-1">
+          <NewsCard article={articles[2]} index={2} priority />
+        </div>
+      )}
+
+      {/* Tall Highlight (1×2) */}
+      {articles[3] && (
+        <div className="lg:col-span-1 lg:row-span-2">
+          <NewsCard article={articles[3]} index={3} priority />
+        </div>
+      )}
+
+      {/* Standard feed (1×1) */}
+      {articles.slice(4).map((article, idx) => (
+        <div key={article.id} className="lg:col-span-1">
+          <NewsCard article={article} index={idx + 4} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Main export ─────────────────────────────────────────────────── */
+export default function NewsGrid({ articles }: NewsGridProps) {
+  if (articles.length === 0) return null;
+
+  const topImagesCount = countTopImages(articles);
+
+  if (topImagesCount === 0) {
+    return <BroadsheetLayout articles={articles} />;
+  }
+
+  return <BentoGrid articles={articles} />;
+}
+```
+
+--- FILE: app/components/FilterBar.tsx ---
+```
+"use client";
+
+import type { Filters } from "@/app/types";
+
+const CATEGORY_COLOUR: Record<string, string> = {
+  "AI News": "pill-active-cyan",
+  "Science & Technology": "pill-active-violet",
+  Football: "pill-active-green",
+};
+
+function categoryPillClass(category: string, active: boolean): string {
+  if (!active) return "pill pill-inactive";
+  return `pill ${CATEGORY_COLOUR[category] ?? "pill-active-default"}`;
+}
+
+interface FilterBarProps {
+  filters: Filters;
+  activeCategory: string | null;
+  activeSource: string | null;
+  onCategoryChange: (cat: string | null) => void;
+  onSourceChange: (src: string | null) => void;
+}
+
+export default function FilterBar({
+  filters,
+  activeCategory,
+  activeSource,
+  onCategoryChange,
+  onSourceChange,
+}: FilterBarProps) {
+  if (filters.categories.length === 0 && filters.sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="sticky top-[65px] z-20 backdrop-blur-md bg-white/75 border-b border-gray-200/60">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3">
+
+          {/* Category pills */}
+          <button
+            className={`pill ${!activeCategory ? "pill-active-default" : "pill-inactive"}`}
+            onClick={() => onCategoryChange(null)}
+          >
+            All
+          </button>
+
+          {filters.categories.map((cat) => (
+            <button
+              key={cat}
+              className={categoryPillClass(cat, activeCategory === cat)}
+              onClick={() => onCategoryChange(activeCategory === cat ? null : cat)}
+            >
+              {cat}
+            </button>
+          ))}
+
+          {/* Divider */}
+          {filters.sources.length > 0 && (
+            <div className="h-4 w-px bg-gray-300 mx-1 shrink-0" />
+          )}
+
+          {/* Source pills */}
+          {filters.sources.map((src) => (
+            <button
+              key={src}
+              className={`pill ${activeSource === src ? "pill-active-amber" : "pill-inactive"}`}
+              onClick={() => onSourceChange(activeSource === src ? null : src)}
+            >
+              {src}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+--- FILE: app/components/Header.tsx ---
+```
+"use client";
+
+interface HeaderProps {
+  total: number;
+}
+
+export default function Header({ total }: HeaderProps) {
+  return (
+    <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 border-b border-gray-200/70 shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="w-2 h-2 rounded-full animate-pulse-dot"
+              style={{ background: "#6366f1", boxShadow: "0 0 6px rgba(99,102,241,0.6)" }}
+            />
+            <span
+              className="w-1.5 h-1.5 rounded-full opacity-50"
+              style={{ background: "#a855f7" }}
+            />
+          </div>
+          <h1
+            className="text-xl sm:text-2xl font-bold tracking-tight bg-clip-text text-transparent font-sans"
+            style={{
+              backgroundImage:
+                "linear-gradient(90deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%)",
+            }}
+          >
+            NewsAgg 2026
+          </h1>
+        </div>
+
+        {/* Article count */}
+        {total > 0 && (
+          <span className="font-sans text-xs sm:text-sm text-gray-500 bg-gray-100 border border-gray-200 px-3 py-1 rounded-full">
+            {total.toLocaleString()}&nbsp;articles
+          </span>
+        )}
+      </div>
+    </header>
+  );
+}
+```
+
+--- FILE: app/layout.tsx ---
+```
+import type { Metadata } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "NewsAgg 2026",
+  description: "AI-Powered News Aggregator",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="relative overflow-x-hidden bg-[#fafafa]">
+        {/* Soft editorial mesh gradient — sage, sky, peach, lavender */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-[700px] h-[700px] rounded-full blur-[120px] -top-48 -left-48 opacity-40 animate-float1"
+               style={{ background: "radial-gradient(circle, rgba(134,239,172,0.35) 0%, transparent 70%)" }} />
+          <div className="absolute w-[600px] h-[600px] rounded-full blur-[100px] -bottom-32 -right-32 opacity-35 animate-float2"
+               style={{ background: "radial-gradient(circle, rgba(147,197,253,0.30) 0%, transparent 70%)" }} />
+          <div className="absolute w-[500px] h-[500px] rounded-full blur-[90px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-25 animate-float3"
+               style={{ background: "radial-gradient(circle, rgba(252,165,165,0.25) 0%, transparent 70%)" }} />
+          <div className="absolute w-[550px] h-[550px] rounded-full blur-[110px] bottom-1/4 right-1/4 opacity-30 animate-float4"
+               style={{ background: "radial-gradient(circle, rgba(196,181,253,0.25) 0%, transparent 70%)" }} />
+        </div>
+
+        {/* Content layer */}
+        <div className="relative z-10">
+          {children}
+        </div>
+      </body>
+    </html>
+  );
+}
+```
+
+--- FILE: app/lib/api.ts ---
+```
+import type { Filters, PaginatedArticles } from "@/app/types";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export async function fetchNews(params: {
+  page?: number;
+  pageSize?: number;
+  category?: string | null;
+  source?: string | null;
+}): Promise<PaginatedArticles> {
+  const { page = 1, pageSize = 12, category, source } = params;
+  const url = new URL(`${API_BASE}/api/news`);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("page_size", String(pageSize));
+  if (category) url.searchParams.set("category", category);
+  if (source) url.searchParams.set("source", source);
+
+  const res = await fetch(url.toString(), { cache: "no-store" });
+  if (!res.ok) throw new Error(`fetchNews failed: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchFilters(): Promise<Filters> {
+  const res = await fetch(`${API_BASE}/api/news/filters`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`fetchFilters failed: ${res.status}`);
+  return res.json();
+}
+```
+
+--- FILE: app/page.tsx ---
+```
+"use client";
+
+import { useEffect, useState } from "react";
+
+import FilterBar from "@/app/components/FilterBar";
+import Header from "@/app/components/Header";
+import NewsGrid from "@/app/components/NewsGrid";
+import SkeletonGrid from "@/app/components/SkeletonGrid";
+import { fetchFilters, fetchNews } from "@/app/lib/api";
+import type { Article, Filters } from "@/app/types";
+
+const PAGE_SIZE = 12;
+
+export default function HomePage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [category, setCategory] = useState<string | null>(null);
+  const [source, setSource] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({ categories: [], sources: [] });
+  const [error, setError] = useState<string | null>(null);
+
+  // Load filter options once
+  useEffect(() => {
+    fetchFilters()
+      .then(setFilters)
+      .catch(() => {/* non-fatal */});
+  }, []);
+
+  // Reset + fetch page 1 whenever a filter changes
+  useEffect(() => {
+    let active = true;
+    setInitialLoading(true);
+    setError(null);
+    setPage(1);
+
+    fetchNews({ page: 1, pageSize: PAGE_SIZE, category, source })
+      .then((data) => {
+        if (!active) return;
+        setArticles(data.items);
+        setTotal(data.total);
+        setInitialLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setError("Could not reach the API. Is the backend running on port 8000?");
+        setInitialLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [category, source]);
+
+  // Fetch next pages (page > 1)
+  useEffect(() => {
+    if (page === 1) return;
+    let active = true;
+    setLoadingMore(true);
+
+    fetchNews({ page, pageSize: PAGE_SIZE, category, source })
+      .then((data) => {
+        if (!active) return;
+        setArticles((prev) => [...prev, ...data.items]);
+        setTotal(data.total);
+        setLoadingMore(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setLoadingMore(false);
+      });
+
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  const hasMore = articles.length < total;
+
+  return (
+    <main className="min-h-screen">
+      <div className="relative z-10">
+        <Header total={total} />
+
+        <FilterBar
+          filters={filters}
+          activeCategory={category}
+          activeSource={source}
+          onCategoryChange={(cat) => setCategory(cat)}
+          onSourceChange={(src) => setSource(src)}
+        />
+
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+          {/* ── Error state ── */}
+          {error && (
+            <div className="glass rounded-2xl p-10 text-center max-w-lg mx-auto mt-16">
+              <p className="font-sans text-red-600 font-medium mb-2">Connection error</p>
+              <p className="font-sans text-gray-500 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* ── Loading skeletons ── */}
+          {!error && initialLoading && <SkeletonGrid count={8} />}
+
+          {/* ── Empty state ── */}
+          {!error && !initialLoading && articles.length === 0 && (
+            <div className="glass rounded-2xl p-10 text-center max-w-lg mx-auto mt-16">
+              <p className="font-sans text-gray-600 font-medium mb-2">No articles yet</p>
+              <p className="font-sans text-gray-400 text-sm">
+                Trigger a scrape via{" "}
+                <code className="bg-gray-100 px-1.5 py-0.5 rounded text-indigo-600 font-sans text-xs">
+                  POST /api/scrape
+                </code>{" "}
+                to populate the feed.
+              </p>
+            </div>
+          )}
+
+          {/* ── Article grid ── */}
+          {!error && !initialLoading && articles.length > 0 && (
+            <>
+              <NewsGrid articles={articles} />
+
+              {/* Load more */}
+              {hasMore && (
+                <div className="flex justify-center mt-12">
+                  <button
+                    className="glass-btn px-10 py-3 text-sm font-semibold tracking-wide"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 border-t-white animate-spin" />
+                        Loading…
+                      </span>
+                    ) : (
+                      `Load more · ${total - articles.length} remaining`
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {!hasMore && (
+                <p className="font-sans text-center text-gray-400 text-sm mt-12">
+                  You&apos;ve reached the end · {total} articles total
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </main>
+  );
+}
+```
+
+--- FILE: app/globals.css ---
+```
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700;800;900&family=Merriweather:wght@400;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ─────────────────────────────────────────────────────────── */
+:root {
+  --bg-base: #fafafa;
+  --bg-secondary: #f3f4f6;
+  --ink: #111827;
+  --ink-muted: #6b7280;
+  --ink-faint: #9ca3af;
+  --sage: #86efac;
+  --sky: #93c5fd;
+  --peach: #fca5a5;
+  --lavender: #c4b5fd;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--ink);
+  font-family: "Inter", system-ui, -apple-system, ui-sans-serif, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar but keep scroll behaviour */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Glassmorphism utilities (Frosted Quartz) ─────────────────────── */
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-gray-200/60 shadow-card;
+  }
+
+  .glass-card {
+    @apply glass rounded-3xl transition-all duration-300 cursor-pointer;
+  }
+
+  .glass-card:hover {
+    @apply bg-white/85 border-gray-300/70;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 48px 0 rgba(0, 0, 0, 0.10);
+  }
+
+  .glass-btn {
+    @apply bg-gray-900 text-white border-transparent rounded-full px-6 py-2.5
+           text-sm font-sans font-medium transition-all duration-200
+           hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* ── Filter pills ── */
+  .pill {
+    @apply px-4 py-1.5 rounded-full text-sm font-sans font-medium border
+           transition-all duration-200 cursor-pointer whitespace-nowrap select-none;
+  }
+
+  .pill-inactive {
+    @apply bg-white/80 border-gray-200 text-gray-500
+           hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700;
+  }
+
+  .pill-active-default {
+    @apply bg-gray-900 border-gray-900 text-white;
+  }
+
+  .pill-active-cyan {
+    @apply bg-sky-50 border-sky-300 text-sky-700
+           shadow-[0_0_10px_rgba(56,189,248,0.15)];
+  }
+
+  .pill-active-violet {
+    @apply bg-violet-50 border-violet-300 text-violet-700
+           shadow-[0_0_10px_rgba(139,92,246,0.15)];
+  }
+
+  .pill-active-green {
+    @apply bg-emerald-50 border-emerald-300 text-emerald-700
+           shadow-[0_0_10px_rgba(52,211,153,0.15)];
+  }
+
+  .pill-active-amber {
+    @apply bg-amber-50 border-amber-300 text-amber-700
+           shadow-[0_0_10px_rgba(251,191,36,0.15)];
+  }
+
+  /* ── Frosted quartz (text-only cards) ── */
+  .quartz-card {
+    @apply bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl
+           shadow-card cursor-pointer transition-all duration-300;
+  }
+
+  .quartz-card:hover {
+    @apply bg-white border-gray-300/80;
+    transform: translateY(-5px);
+    box-shadow: 0 20px 48px 0 rgba(0, 0, 0, 0.10);
+  }
+}
+
+/* ─── Skeleton shimmer (light mode) ──────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0px,
+    rgba(0, 0, 0, 0.08) 40px,
+    rgba(0, 0, 0, 0.04) 80px
+  );
+  background-size: 700px 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -700px 0; }
+  100% { background-position:  700px 0; }
+}
+```
+
